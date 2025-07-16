@@ -201,8 +201,8 @@ constructor(
         }
 
         binding.monthlyRepeatWeeks.setOnClickListener {
-            val dayOfMonth = startDateCalendar.get(Calendar.DAY_OF_MONTH)
-            val zeroBasedWeekIdx = (dayOfMonth - 1) / 7
+            val calendarWeekOfMonth = startDateCalendar.get(Calendar.WEEK_OF_MONTH)
+            val zeroBasedWeekIdx = calendarWeekOfMonth - 1  // Convert to 0-based
             weeksOfMonth = mutableListOf(zeroBasedWeekIdx)
             daysOfMonth = null
             generateSummary()
@@ -427,9 +427,9 @@ constructor(
                     val formattedDate = formatter.format(arrayOf(date))
                     " on the $formattedDate"
                 } else {
-                    val week = startDateCalendar.get(Calendar.WEEK_OF_MONTH)
+                    val displayWeek = (weeksOfMonth?.firstOrNull() ?: 0) + 1  // 0-based to 1-based
                     val formatter = MessageFormat("{0,ordinal}", LanguageHelper.systemLocale)
-                    val formattedWeek = formatter.format(arrayOf(week))
+                    val formattedWeek = formatter.format(arrayOf(displayWeek))
                     val dayLongName =
                         startDateCalendar.getDisplayName(
                             Calendar.DAY_OF_WEEK,

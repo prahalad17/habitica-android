@@ -15,6 +15,7 @@ import com.habitrpg.android.habitica.receivers.TaskReceiver
 import com.habitrpg.common.habitica.helpers.ExceptionHandler
 import com.habitrpg.shared.habitica.HLogger
 import com.habitrpg.shared.habitica.LogLevel
+import com.habitrpg.shared.habitica.models.tasks.Frequency
 import com.habitrpg.shared.habitica.models.tasks.TaskType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +112,12 @@ class TaskAlarmManager(
         MainScope().launch(ExceptionHandler.coroutine()) {
             val task =
                 taskRepository.getTaskCopy(taskId)
-                    .filter { task -> task.isValid && task.isManaged && TaskType.DAILY == task.type }
+                    .filter { task -> 
+                        task.isValid && 
+                        task.isManaged && 
+                        TaskType.DAILY == task.type && 
+                        task.frequency == Frequency.DAILY 
+                    }
                     .first()
             setAlarmsForTask(task)
         }

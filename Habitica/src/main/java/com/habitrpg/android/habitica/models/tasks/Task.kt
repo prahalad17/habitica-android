@@ -401,9 +401,14 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
         if (frequency == Frequency.MONTHLY) {
             daysOfMonth?.let {
                 if (it.isEmpty()) return@let
-                nextOccurence = nextOccurence.withDayOfMonth(it.first())
+                val targetDay = it.first()
+                val lastDayOfMonth = nextOccurence.toLocalDate().lengthOfMonth()
+                val actualDay = minOf(targetDay, lastDayOfMonth)
+                nextOccurence = nextOccurence.withDayOfMonth(actualDay)
                 if (nextOccurence.isBefore(startDate)) {
                     nextOccurence = nextOccurence.plusMonths(1)
+                    val newLastDay = nextOccurence.toLocalDate().lengthOfMonth()
+                    nextOccurence = nextOccurence.withDayOfMonth(minOf(targetDay, newLastDay))
                 }
             }
         }
@@ -418,13 +423,12 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
                         }
                         val todayWithTime = nextOccurence
                             .withHour(reminderTime.hour).withMinute(reminderTime.minute)
-                        nextOccurence = if (occurrencesList.isEmpty() && todayWithTime.isAfter(now)) {
+                        if (occurrencesList.isEmpty() && todayWithTime.isAfter(now)) {
                             todayWithTime
                         } else {
                             nextOccurence.plusDays(everyX)
                                 .withHour(reminderTime.hour).withMinute(reminderTime.minute)
                         }
-                        nextOccurence
                     }
 
                     Frequency.WEEKLY -> {
@@ -479,8 +483,7 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
                             nextOccurence = nextDueDate
                         }
                         // Set time to the reminder time
-                        nextOccurence.withHour(reminderTime.hour)
-                            .withMinute(reminderTime.minute)
+                        nextOccurence
                     }
 
                     Frequency.MONTHLY -> {
@@ -492,6 +495,14 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
                                     nextOccurence = nextOccurence.plusDays(1)
                                 }
                                 nextOccurence = nextOccurence.plusWeeks(weekInMonth)
+                            } else {
+                                val days = getDaysOfMonth()
+                                if (days?.isNotEmpty() == true) {
+                                    val targetDay = days.first()
+                                    val lastDayOfMonth = nextOccurence.toLocalDate().lengthOfMonth()
+                                    val actualDay = minOf(targetDay, lastDayOfMonth)
+                                    nextOccurence = nextOccurence.withDayOfMonth(actualDay)
+                                }
                             }
                         }
                         val todayWithTime = nextOccurence
@@ -499,16 +510,25 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
                         if (occurrencesList.isEmpty() && todayWithTime.isAfter(now)) {
                             todayWithTime
                         } else if (weekInMonth != null && weekdayInMonth != null) {
-                            nextOccurence = nextOccurence.plusMonths(everyX)
+                            var tempOccurence = nextOccurence.plusMonths(everyX)
                                 .withHour(reminderTime.hour).withMinute(reminderTime.minute)
                                 .withDayOfMonth(1)
-                            while (nextOccurence.dayOfWeek != weekdayInMonth) {
-                                nextOccurence = nextOccurence.plusDays(1)
+                            while (tempOccurence.dayOfWeek != weekdayInMonth) {
+                                tempOccurence = tempOccurence.plusDays(1)
                             }
-                            nextOccurence.plusWeeks(weekInMonth)
+                            tempOccurence = tempOccurence.plusWeeks(weekInMonth)
+                            tempOccurence
                         } else {
-                            nextOccurence.plusMonths(everyX)
+                            var tempOccurence = nextOccurence.plusMonths(everyX)
                                 .withHour(reminderTime.hour).withMinute(reminderTime.minute)
+                            val days = getDaysOfMonth()
+                            if (days?.isNotEmpty() == true) {
+                                val targetDay = days.first()
+                                val lastDayOfMonth = tempOccurence.toLocalDate().lengthOfMonth()
+                                val actualDay = minOf(targetDay, lastDayOfMonth)
+                                tempOccurence = tempOccurence.withDayOfMonth(actualDay)
+                            }
+                            tempOccurence
                         }
                     }
 
@@ -525,6 +545,7 @@ open class Task : RealmObject, BaseMainObject, Parcelable, BaseTask {
                                 .withHour(reminderTime.hour).withMinute(reminderTime.minute)
                         }
                     }
+                    else -> nextOccurence
                 }
 
             occurrencesList.add(nextOccurence)

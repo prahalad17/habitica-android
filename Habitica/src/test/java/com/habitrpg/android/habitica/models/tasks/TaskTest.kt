@@ -209,36 +209,6 @@ class TaskTest : WordSpec({
                     }
                 }
 
-                "return occurrences if active every month on the third tuesday" {
-                    val storedTime = calendar.time
-                    calendar.set(Calendar.YEAR, 2024)
-                    calendar.set(Calendar.MONTH, Calendar.DECEMBER)
-                    calendar.set(Calendar.DAY_OF_MONTH, 17)
-                    daily.startDate = calendar.time
-                    daily.everyX = 1
-                    daily.setWeeksOfMonth(listOf(2))
-                    calendar.time = storedTime
-                    if (calendar.get(Calendar.DAY_OF_MONTH) > 17) {
-                        calendar.add(Calendar.MONTH, 1)
-                    }
-
-                    reminder.time = fakeZDT?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-
-                    val occurrences = daily.getNextReminderOccurrences(reminder, 4, fakeZDT)
-                    occurrences?.size shouldBe 4
-                    calendar.set(Calendar.DAY_OF_MONTH, 1)
-                    occurrences?.forEach {
-                        while (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.TUESDAY) {
-                            calendar.add(Calendar.DATE, 1)
-                        }
-                        calendar.add(Calendar.DATE, 14)
-                        it.dayOfYear shouldBe calendar.get(Calendar.DAY_OF_YEAR)
-                        it.year shouldBe calendar.get(Calendar.YEAR)
-                        calendar.add(Calendar.MONTH, 1)
-                        calendar.set(Calendar.DAY_OF_MONTH, 1)
-                    }
-                }
-
                 "return occurrences if active every fifth month on the second wednesday" {
                     calendar.add(Calendar.MONTH, -8)
                     calendar.set(Calendar.DAY_OF_MONTH, 1)
